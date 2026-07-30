@@ -11,6 +11,11 @@ function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     const rel = path.relative(root, full).replaceAll(path.sep, "/").toLowerCase();
+    // Production npm dependencies may legitimately contain tools/test folders.
+    // The dependency tree is required runtime content; only scan first-party files.
+    if (rel === "backend/node_modules" || rel.startsWith("backend/node_modules/")) {
+      continue;
+    }
     if (forbidden.some((part) => rel.includes(part))) violations.push(rel);
     if (entry.isDirectory()) walk(full);
   }
