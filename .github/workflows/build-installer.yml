@@ -27,8 +27,6 @@ jobs:
 
       - name: Checkout installer workflow
         uses: actions/checkout@v5
-        with:
-          path: installer
 
       - name: Checkout private source
         uses: actions/checkout@v5
