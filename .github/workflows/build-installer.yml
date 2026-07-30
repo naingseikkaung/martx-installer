@@ -97,6 +97,23 @@ jobs:
         shell: pwsh
         run: choco install innosetup --no-progress --yes
 
+      - name: Verify Inno Setup
+        shell: pwsh
+        run: |
+          $progFilesX86 = ${env:ProgramFiles(x86)}
+          if ([string]::IsNullOrWhiteSpace($progFilesX86)) {
+            Write-Error 'Could not read ProgramFiles(x86).'
+            exit 1
+          }
+          $iscc = Join-Path $progFilesX86 'Inno Setup 6\ISCC.exe'
+          Write-Host "Looking for ISCC at: $iscc"
+          if (-not (Test-Path -Path $iscc)) {
+            Write-Error "ISCC.exe was not found at $iscc."
+            Get-ChildItem -Path $progFilesX86 -Force | Select-Object Name, PSIsContainer
+            exit 1
+          }
+          Write-Host 'Inno Setup verified.'
+
       - name: Verify package contents
         run: node installer/verify-package.js installer/stage
 
@@ -104,7 +121,15 @@ jobs:
         shell: pwsh
         env:
           MARTX_INSTALLER_VERSION: ${{ inputs.version }}
-        run: '& "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=${{ inputs.version }}" installer/MartX.iss'
+        run: |
+          $progFilesX86 = ${env:ProgramFiles(x86)}
+          $iscc = Join-Path $progFilesX86 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -Path $iscc)) {
+            Write-Error "ISCC.exe was not found at $iscc."
+            exit 1
+          }
+          & $iscc "/DMyAppVersion=${{ inputs.version }}" installer/MartX.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
