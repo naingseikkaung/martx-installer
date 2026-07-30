@@ -22,8 +22,13 @@ jobs:
           if (-not '${{ secrets.SOURCE_REPO_TOKEN }}') { throw 'SOURCE_REPO_TOKEN is not configured.' }
           if (-not '${{ vars.SOURCE_REPOSITORY }}') { throw 'SOURCE_REPOSITORY is not configured.' }
 
+      - name: Checkout installer workflow
+        uses: actions/checkout@v5
+        with:
+          path: installer
+
       - name: Checkout private source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.SOURCE_REPOSITORY }}
           token: ${{ secrets.SOURCE_REPO_TOKEN }}
@@ -31,7 +36,7 @@ jobs:
           fetch-depth: 1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
