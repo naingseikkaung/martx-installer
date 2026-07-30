@@ -57,6 +57,22 @@ jobs:
         working-directory: source
         run: npm ci
 
+      - name: Build source
+        working-directory: source
+        run: npm run build
+
+      - name: Verify frontend build output
+        shell: pwsh
+        run: |
+          $expected = 'source\frontend\dist'
+          if (-not (Test-Path -Path $expected)) {
+            Write-Error "Expected build output at $expected was not found."
+            Write-Host 'Available source directories:'
+            Get-ChildItem -Path source -Directory | Select-Object -ExpandProperty Name
+            exit 1
+          }
+          Write-Host "$expected found."
+
       - name: Download NSSM
         shell: pwsh
         run: |
