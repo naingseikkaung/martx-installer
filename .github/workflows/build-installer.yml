@@ -1,0 +1,78 @@
+name: Build MartX Windows Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Installer version
+        required: true
+        default: 1.0.0
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    steps:
+      - name: Validate protected inputs
+        shell: pwsh
+        run: |
+          if (-not '${{ secrets.SOURCE_REPO_TOKEN }}') { throw 'SOURCE_REPO_TOKEN is not configured.' }
+          if (-not '${{ vars.SOURCE_REPOSITORY }}') { throw 'SOURCE_REPOSITORY is not configured.' }
+
+      - name: Checkout private source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SOURCE_REPOSITORY }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+          fetch-depth: 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install dependencies
+        working-directory: source
+        run: npm ci
+
+      - name: Download NSSM
+        shell: pwsh
+        run: |
+          $version = '2.24'
+          Invoke-WebRequest "https://nssm.cc/release/nssm-$version.zip" -OutFile nssm.zip
+          Expand-Archive nssm.zip -DestinationPath nssm
+          New-Item -ItemType Directory -Force installer/stage/service | Out-Null
+          Copy-Item "nssm/nssm-$version/win64/nssm.exe" installer/stage/service/nssm.exe
+
+      - name: Stage production runtime
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force installer/stage/runtime | Out-Null
+          Copy-Item (Get-Command node).Source installer/stage/runtime/node.exe
+          powershell -ExecutionPolicy Bypass -File installer/stage-runtime.ps1 -SourceRoot (Resolve-Path source) -StageRoot (Resolve-Path installer/stage)
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress --yes
+
+      - name: Verify package contents
+        run: node installer/verify-package.js installer/stage
+
+      - name: Compile installer
+        shell: pwsh
+        env:
+          MARTX_INSTALLER_VERSION: ${{ inputs.version }}
+        run: '& "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "/DMyAppVersion=${{ inputs.version }}" installer/MartX.iss'
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MartXPOS-Windows-Installer
+          path: installer/output/*.exe
+          if-no-files-found: error
