@@ -21,9 +21,19 @@ jobs:
     steps:
       - name: Validate protected inputs
         shell: pwsh
+        env:
+          SOURCE_REPO_TOKEN: ${{ secrets.SOURCE_REPO_TOKEN }}
+          SOURCE_REPOSITORY: ${{ vars.SOURCE_REPOSITORY }}
         run: |
-          if (-not '${{ secrets.SOURCE_REPO_TOKEN }}') { throw 'SOURCE_REPO_TOKEN is not configured.' }
-          if (-not '${{ vars.SOURCE_REPOSITORY }}') { throw 'SOURCE_REPOSITORY is not configured.' }
+          if ([string]::IsNullOrWhiteSpace($env:SOURCE_REPO_TOKEN)) {
+            Write-Error 'SOURCE_REPO_TOKEN is not configured. Add it under Settings -> Secrets and variables -> Actions -> New repository secret.'
+            exit 1
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SOURCE_REPOSITORY)) {
+            Write-Error 'SOURCE_REPOSITORY is not configured. Add it under Settings -> Secrets and variables -> Actions -> New repository variable with value owner/repo.'
+            exit 1
+          }
+          Write-Host "Protected inputs present for $env:SOURCE_REPOSITORY."
 
       - name: Checkout installer workflow
         uses: actions/checkout@v5
