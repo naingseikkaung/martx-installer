@@ -26,6 +26,7 @@ Source: "martx.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "install-service.ps1"; DestDir: "{app}\service"; Flags: ignoreversion
 Source: "firewall.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "smoke-install.ps1"; DestDir: "{app}"; Flags: ignoreversion
+Source: "install.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{commonappdata}\MartX\config"
@@ -38,9 +39,7 @@ Name: "{group}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http
 Name: "{commondesktop}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"; IconFilename: "{app}\martx.ico"
 
 [Run]
-Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\service\install-service.ps1"""; Flags: runhidden waituntilterminated
-Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\firewall.ps1"""; Flags: runhidden waituntilterminated
-Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\smoke-install.ps1"" -OpenBrowser"; Flags: runhidden waituntilterminated
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\install.ps1"" -InstallRoot ""{app}"" -DataRoot ""{commonappdata}\MartX"""; Flags: runhidden waituntilterminated
 
 [UninstallRun]
 Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\service\install-service.ps1"" -Remove"; Flags: runhidden waituntilterminated
