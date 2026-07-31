@@ -23,7 +23,9 @@ Copy-Item "$SourceRoot/backend/package.json", "$SourceRoot/backend/package-lock.
 Copy-Item "$srcDist\*" "$StageRoot/frontend/dist" -Recurse -Force
 
 Push-Location "$StageRoot/backend"
-npm ci --omit=dev --ignore-scripts
+# sqlite3 is a native dependency. Keep install scripts enabled so npm can
+# download/build node_sqlite3.node for the Node ABI used by this installer.
+npm ci --omit=dev
 Pop-Location
 
 node "$PSScriptRoot/verify-package.js" $StageRoot
