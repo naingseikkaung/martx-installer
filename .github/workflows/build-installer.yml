@@ -117,6 +117,9 @@ jobs:
       - name: Verify package contents
         run: node installer/verify-package.js installer/stage
 
+      - name: Create Windows icon
+        run: node installer/create-ico.js source/logo.png installer/martx.ico
+
       - name: Compile installer
         shell: pwsh
         env:

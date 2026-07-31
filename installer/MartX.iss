@@ -18,9 +18,11 @@ OutputBaseFilename=MartXPOS-Setup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 Uninstallable=yes
+SetupIconFile=martx.ico
 
 [Files]
 Source: "stage\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "martx.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "install-service.ps1"; DestDir: "{app}\service"; Flags: ignoreversion
 Source: "firewall.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "smoke-install.ps1"; DestDir: "{app}"; Flags: ignoreversion
@@ -32,8 +34,8 @@ Name: "{commonappdata}\MartX\logs"
 Name: "{commonappdata}\MartX\backups"
 
 [Icons]
-Name: "{group}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"
-Name: "{commondesktop}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"
+Name: "{group}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"; IconFilename: "{app}\martx.ico"
+Name: "{commondesktop}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"; IconFilename: "{app}\martx.ico"
 
 [Run]
 Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\service\install-service.ps1"""; Flags: runhidden waituntilterminated
