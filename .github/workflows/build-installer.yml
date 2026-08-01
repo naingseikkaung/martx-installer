@@ -117,6 +117,23 @@ jobs:
       - name: Verify package contents
         run: node installer/verify-package.js installer/stage
 
+      - name: Preflight staged Windows service
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installRoot = (Resolve-Path installer/stage).Path
+          $dataRoot = Join-Path $env:RUNNER_TEMP 'martx-preflight-data'
+          New-Item -ItemType Directory -Force $dataRoot | Out-Null
+          try {
+            powershell -NoProfile -ExecutionPolicy Bypass -File installer/install-service.ps1 `
+              -InstallRoot $installRoot -DataRoot $dataRoot
+            powershell -NoProfile -ExecutionPolicy Bypass -File installer/smoke-install.ps1 `
+              -TimeoutSeconds 45
+          } finally {
+            powershell -NoProfile -ExecutionPolicy Bypass -File installer/install-service.ps1 `
+              -InstallRoot $installRoot -DataRoot $dataRoot -Remove
+          }
+
       - name: Create Windows icon
         run: node installer/create-ico.js source/logo.png installer/martx.ico
 
