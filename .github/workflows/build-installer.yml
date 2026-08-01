@@ -171,7 +171,13 @@ jobs:
             Write-Host "Installing $($installer.FullName) silently."
             $install = Start-Process -FilePath $installer.FullName -ArgumentList @(
               '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$installLog"
-            ) -Wait -PassThru
+            ) -PassThru
+            $finished = Wait-Process -Id $install.Id -Timeout 180 -ErrorAction SilentlyContinue
+            if (-not $finished) {
+              Stop-Process -Id $install.Id -Force -ErrorAction SilentlyContinue
+              throw 'Installer did not exit within 180 seconds.'
+            }
+            $install.Refresh()
             if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)." }
 
             powershell -NoProfile -ExecutionPolicy Bypass -File installer/smoke-install.ps1 -TimeoutSeconds 45
@@ -181,13 +187,6 @@ jobs:
               Get-Content $installLog -Tail 120
             }
             throw
-          } finally {
-            $uninstaller = Join-Path ${env:ProgramFiles} 'MartX\unins000.exe'
-            if (Test-Path $uninstaller) {
-              Start-Process -FilePath $uninstaller -ArgumentList @(
-                '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
-              ) -Wait | Out-Null
-            }
           }
 
       - name: Upload installer artifact
