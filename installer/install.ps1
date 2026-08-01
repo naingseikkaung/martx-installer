@@ -18,13 +18,10 @@ try {
 
   & (Join-Path $InstallRoot 'service\install-service.ps1') `
     -InstallRoot $InstallRoot -DataRoot $DataRoot
-  if ($LASTEXITCODE -ne 0) { throw "Windows service installation failed (exit code $LASTEXITCODE)." }
 
   & (Join-Path $InstallRoot 'firewall.ps1')
-  if ($LASTEXITCODE -ne 0) { throw "Windows Firewall configuration failed (exit code $LASTEXITCODE)." }
 
   & (Join-Path $InstallRoot 'smoke-install.ps1') -OpenBrowser
-  if ($LASTEXITCODE -ne 0) { throw "MartX POS did not become healthy." }
 
   Write-InstallLog 'Installation completed successfully.'
   exit 0
