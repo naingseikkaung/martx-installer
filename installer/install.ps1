@@ -33,7 +33,11 @@ try {
 } catch {
   $message = "MartX POS installation failed: $($_.Exception.Message)`n`nSee $log for details."
   Write-InstallLog $message
-  Add-Type -AssemblyName PresentationFramework
-  [System.Windows.MessageBox]::Show($message, 'MartX POS Installation Error', 'OK', 'Error') | Out-Null
+  # Silent CI installs must never wait for an interactive dialog. Normal
+  # client installs still get a useful UAC-era error popup.
+  if ($env:MARTX_INSTALLER_TEST -ne '1') {
+    Add-Type -AssemblyName PresentationFramework
+    [System.Windows.MessageBox]::Show($message, 'MartX POS Installation Error', 'OK', 'Error') | Out-Null
+  }
   exit 1
 }
