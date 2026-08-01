@@ -13,6 +13,7 @@ DefaultDirName={autopf}\MartX
 DefaultGroupName=MartX POS
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
+CloseApplications=yes
 OutputDir=output
 OutputBaseFilename=MartXPOS-Setup-{#MyAppVersion}
 Compression=lzma
@@ -48,3 +49,21 @@ Filename: "powershell.exe"; Parameters: "-ExecutionPolicy Bypass -File ""{app}\f
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+  NssmPath: string;
+begin
+  if CurStep = ssInstall then
+  begin
+    { Stop the existing service before replacing native sqlite3 files. }
+    NssmPath := ExpandConstant('{app}\service\nssm.exe');
+    if FileExists(NssmPath) then
+    begin
+      Exec(NssmPath, 'stop MartXPOS confirm', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Sleep(2000);
+    end;
+  end;
+end;
