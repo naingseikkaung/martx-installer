@@ -1,6 +1,7 @@
 param(
   [string]$InstallRoot = "$env:ProgramFiles\MartX",
-  [string]$DataRoot = "$env:ProgramData\MartX"
+  [string]$DataRoot = "$env:ProgramData\MartX",
+  [switch]$OpenBrowser
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,7 +22,11 @@ try {
 
   & (Join-Path $InstallRoot 'firewall.ps1')
 
-  & (Join-Path $InstallRoot 'smoke-install.ps1') -OpenBrowser
+  if ($OpenBrowser) {
+    & (Join-Path $InstallRoot 'smoke-install.ps1') -OpenBrowser
+  } else {
+    & (Join-Path $InstallRoot 'smoke-install.ps1')
+  }
 
   Write-InstallLog 'Installation completed successfully.'
   exit 0
