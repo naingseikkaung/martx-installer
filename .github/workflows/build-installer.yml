@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     runs-on: windows-2025
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - name: Validate protected inputs
         shell: pwsh
@@ -54,14 +54,17 @@ jobs:
           cache-dependency-path: source/package-lock.json
 
       - name: Install dependencies
+        timeout-minutes: 12
         working-directory: source
         run: npm ci
 
       - name: Install frontend dependencies
+        timeout-minutes: 10
         working-directory: source/frontend
         run: npm ci
 
       - name: Build source
+        timeout-minutes: 10
         working-directory: source
         run: npm run build --prefix frontend
 
@@ -78,6 +81,7 @@ jobs:
           Write-Host "$expected found."
 
       - name: Download NSSM
+        timeout-minutes: 5
         shell: pwsh
         run: |
           $version = '2.24'
@@ -87,6 +91,7 @@ jobs:
           Copy-Item "nssm/nssm-$version/win64/nssm.exe" installer/stage/service/nssm.exe
 
       - name: Stage production runtime
+        timeout-minutes: 12
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force installer/stage/runtime | Out-Null
@@ -94,6 +99,7 @@ jobs:
           powershell -ExecutionPolicy Bypass -File installer/stage-runtime.ps1 -SourceRoot (Resolve-Path source) -StageRoot (Resolve-Path installer/stage)
 
       - name: Install Inno Setup
+        timeout-minutes: 10
         shell: pwsh
         run: choco install innosetup --no-progress --yes
 
@@ -118,6 +124,7 @@ jobs:
         run: node installer/verify-package.js installer/stage
 
       - name: Preflight staged Windows service
+        timeout-minutes: 10
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -138,6 +145,7 @@ jobs:
         run: node installer/create-ico.js source/logo.png installer/martx.ico
 
       - name: Compile installer
+        timeout-minutes: 10
         shell: pwsh
         env:
           MARTX_INSTALLER_VERSION: ${{ inputs.version }}
@@ -152,6 +160,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Install and smoke-test compiled installer
+        timeout-minutes: 12
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
