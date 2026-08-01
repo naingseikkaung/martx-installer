@@ -173,16 +173,30 @@ jobs:
           $installLog = Join-Path $env:RUNNER_TEMP 'martx-installer-test.log'
           try {
             Write-Host "Installing $($installer.FullName) silently."
-            $install = Start-Process -FilePath $installer.FullName -ArgumentList @(
+            Start-Process -FilePath $installer.FullName -ArgumentList @(
               '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', "/LOG=$installLog"
-            ) -PassThru
-            $finished = Wait-Process -Id $install.Id -Timeout 180 -ErrorAction SilentlyContinue
-            if (-not $finished) {
-              Stop-Process -Id $install.Id -Force -ErrorAction SilentlyContinue
-              throw 'Installer did not exit within 180 seconds.'
+            ) | Out-Null
+
+            # Inno Setup may spawn an elevated child process and leave the
+            # original launcher alive. Wait for the application result instead
+            # of waiting on the launcher PID.
+            $runtimeLog = 'C:\ProgramData\MartX\logs\install.log'
+            $deadline = (Get-Date).AddSeconds(180)
+            $completed = $false
+            while ((Get-Date) -lt $deadline) {
+              if (Test-Path $runtimeLog) {
+                $contents = Get-Content $runtimeLog -Raw
+                if ($contents -match 'Installation completed successfully\.') {
+                  $completed = $true
+                  break
+                }
+                if ($contents -match 'MartX POS installation failed:') {
+                  throw 'MartX post-install script reported failure.'
+                }
+              }
+              Start-Sleep -Seconds 3
             }
-            $install.Refresh()
-            if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)." }
+            if (-not $completed) { throw 'Installer did not complete setup within 180 seconds.' }
 
             powershell -NoProfile -ExecutionPolicy Bypass -File installer/smoke-install.ps1 -TimeoutSeconds 45
           } catch {
