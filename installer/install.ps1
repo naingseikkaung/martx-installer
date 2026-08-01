@@ -17,11 +17,21 @@ function Write-InstallLog([string]$Message) {
 try {
   Write-InstallLog "Installing MartX POS from $InstallRoot"
 
+  Write-InstallLog 'Installing Windows service.'
   & (Join-Path $InstallRoot 'service\install-service.ps1') `
     -InstallRoot $InstallRoot -DataRoot $DataRoot
 
-  & (Join-Path $InstallRoot 'firewall.ps1')
+  Write-InstallLog 'Configuring Windows Firewall.'
+  try {
+    & (Join-Path $InstallRoot 'firewall.ps1')
+    Write-InstallLog 'Windows Firewall configured.'
+  } catch {
+    # Firewall policy can be restricted by endpoint security or domain policy.
+    # Keep the local app usable and leave a clear warning in the install log.
+    Write-InstallLog "WARNING: Windows Firewall configuration failed: $($_.Exception.Message)"
+  }
 
+  Write-InstallLog 'Waiting for backend health check.'
   if ($OpenBrowser) {
     & (Join-Path $InstallRoot 'smoke-install.ps1') -OpenBrowser
   } else {

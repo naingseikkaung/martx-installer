@@ -134,9 +134,11 @@ jobs:
           try {
             powershell -NoProfile -ExecutionPolicy Bypass -File installer/install-service.ps1 `
               -InstallRoot $installRoot -DataRoot $dataRoot
+            powershell -NoProfile -ExecutionPolicy Bypass -File installer/firewall.ps1
             powershell -NoProfile -ExecutionPolicy Bypass -File installer/smoke-install.ps1 `
               -TimeoutSeconds 45
           } finally {
+            powershell -NoProfile -ExecutionPolicy Bypass -File installer/firewall.ps1 -Remove
             powershell -NoProfile -ExecutionPolicy Bypass -File installer/install-service.ps1 `
               -InstallRoot $installRoot -DataRoot $dataRoot -Remove
           }
