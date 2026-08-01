@@ -30,8 +30,12 @@ if ($Remove) {
 }
 New-Item -ItemType Directory -Force "$DataRoot/config", "$DataRoot/data", "$DataRoot/logs", "$DataRoot/backups" | Out-Null
 if ($existing) { Remove-ExistingService }
-& $nssm install $service (Join-Path $InstallRoot 'runtime\node.exe') (Join-Path $InstallRoot 'backend\server.js')
+$nodePath = Join-Path $InstallRoot 'runtime\node.exe'
+& $nssm install $service $nodePath
 & $nssm set $service AppDirectory (Join-Path $InstallRoot 'backend')
+# Keep the entrypoint relative to AppDirectory. This avoids breaking when the
+# install path contains spaces, such as C:\Program Files\MartX.
+& $nssm set $service AppParameters 'server.js'
 & $nssm set $service AppEnvironmentExtra "NODE_ENV=production" "MARTX_DATA_ROOT=$DataRoot" "HOST=0.0.0.0"
 & $nssm set $service AppStdout (Join-Path $DataRoot 'logs\service-stdout.log')
 & $nssm set $service AppStderr (Join-Path $DataRoot 'logs\service-stderr.log')
