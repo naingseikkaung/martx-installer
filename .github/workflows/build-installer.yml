@@ -66,6 +66,8 @@ jobs:
       - name: Build source
         timeout-minutes: 10
         working-directory: source
+        env:
+          VITE_APP_VERSION: ${{ inputs.version }}
         run: npm run build --prefix frontend
 
       - name: Verify frontend build output
