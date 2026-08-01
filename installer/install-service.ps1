@@ -1,4 +1,4 @@
-param([string]$InstallRoot = "$env:ProgramFiles\MartX", [string]$DataRoot = "$env:ProgramData\MartX", [switch]$Remove)
+param([string]$InstallRoot = "$env:ProgramFiles\MartX", [string]$DataRoot = "$env:ProgramData\MartX", [string]$Version = '', [switch]$Remove)
 $ErrorActionPreference = 'Stop'
 $nssm = Join-Path $InstallRoot 'service\nssm.exe'
 $service = 'MartXPOS'
@@ -36,7 +36,11 @@ $nodePath = Join-Path $InstallRoot 'runtime\node.exe'
 # Keep the entrypoint relative to AppDirectory. This avoids breaking when the
 # install path contains spaces, such as C:\Program Files\MartX.
 & $nssm set $service AppParameters 'server.js'
-& $nssm set $service AppEnvironmentExtra "NODE_ENV=production" "MARTX_DATA_ROOT=$DataRoot" "HOST=0.0.0.0"
+if ([string]::IsNullOrWhiteSpace($Version)) {
+  & $nssm set $service AppEnvironmentExtra "NODE_ENV=production" "MARTX_DATA_ROOT=$DataRoot" "HOST=0.0.0.0"
+} else {
+  & $nssm set $service AppEnvironmentExtra "NODE_ENV=production" "MARTX_DATA_ROOT=$DataRoot" "HOST=0.0.0.0" "MARTX_APP_VERSION=$Version"
+}
 & $nssm set $service AppStdout (Join-Path $DataRoot 'logs\service-stdout.log')
 & $nssm set $service AppStderr (Join-Path $DataRoot 'logs\service-stderr.log')
 & $nssm set $service Start SERVICE_AUTO_START

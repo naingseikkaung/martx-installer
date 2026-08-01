@@ -1,6 +1,7 @@
 param(
   [string]$InstallRoot = "$env:ProgramFiles\MartX",
   [string]$DataRoot = "$env:ProgramData\MartX",
+  [string]$Version = '',
   [switch]$OpenBrowser
 )
 
@@ -19,7 +20,7 @@ try {
 
   Write-InstallLog 'Installing Windows service.'
   & (Join-Path $InstallRoot 'service\install-service.ps1') `
-    -InstallRoot $InstallRoot -DataRoot $DataRoot
+    -InstallRoot $InstallRoot -DataRoot $DataRoot -Version $Version
 
   Write-InstallLog 'Configuring Windows Firewall.'
   try {

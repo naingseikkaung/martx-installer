@@ -40,7 +40,7 @@ Name: "{group}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http
 Name: "{commondesktop}\MartX POS"; Filename: "{sys}\cmd.exe"; Parameters: "/c start http://127.0.0.1:5002/"; IconFilename: "{app}\martx.ico"
 
 [Run]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\install.ps1"" -InstallRoot ""{app}"" -DataRoot ""{commonappdata}\MartX"""; Flags: runhidden waituntilterminated
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\install.ps1"" -InstallRoot ""{app}"" -DataRoot ""{commonappdata}\MartX"" -Version ""{#MyAppVersion}"""; Flags: runhidden waituntilterminated
 Filename: "http://127.0.0.1:5002/"; Description: "Launch MartX POS"; Flags: postinstall nowait shellexec skipifsilent
 
 [UninstallRun]
