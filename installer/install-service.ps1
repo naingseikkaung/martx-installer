@@ -3,18 +3,33 @@ $ErrorActionPreference = 'Stop'
 $nssm = Join-Path $InstallRoot 'service\nssm.exe'
 $service = 'MartXPOS'
 $existing = Get-Service -Name $service -ErrorAction SilentlyContinue
-if ($Remove) {
-  if ($existing) {
-    & $nssm stop $service confirm 2>$null
-    & $nssm remove $service confirm 2>$null
+
+function Remove-ExistingService {
+  $current = Get-Service -Name $service -ErrorAction SilentlyContinue
+  if (-not $current) { return }
+
+  # NSSM writes "The service has not been started" to stderr when the
+  # service is already stopped/paused. That is safe during reinstall.
+  try {
+    $ErrorActionPreference = 'Continue'
+    & $nssm stop $service confirm 2>$null | Out-Null
+  } finally {
+    $ErrorActionPreference = 'Stop'
   }
+
+  & $nssm remove $service confirm 2>$null | Out-Null
+  Start-Sleep -Milliseconds 500
+  if (Get-Service -Name $service -ErrorAction SilentlyContinue) {
+    throw "Could not remove existing Windows service $service."
+  }
+}
+
+if ($Remove) {
+  Remove-ExistingService
   exit 0
 }
 New-Item -ItemType Directory -Force "$DataRoot/config", "$DataRoot/data", "$DataRoot/logs", "$DataRoot/backups" | Out-Null
-if ($existing) {
-  & $nssm stop $service confirm 2>$null
-  & $nssm remove $service confirm 2>$null
-}
+if ($existing) { Remove-ExistingService }
 & $nssm install $service (Join-Path $InstallRoot 'runtime\node.exe') (Join-Path $InstallRoot 'backend\server.js')
 & $nssm set $service AppDirectory (Join-Path $InstallRoot 'backend')
 & $nssm set $service AppEnvironmentExtra "NODE_ENV=production" "MARTX_DATA_ROOT=$DataRoot" "HOST=0.0.0.0"
